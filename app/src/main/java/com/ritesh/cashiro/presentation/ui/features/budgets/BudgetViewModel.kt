@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -53,7 +54,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     private fun observeBaseCurrency() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             currencyRepository.effectiveBaseCurrencyCode.collect { currency ->
                 _uiState.update { it.copy(baseCurrency = currency) }
             }
@@ -61,7 +62,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     private fun loadAccounts() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             accountBalanceDao.getAllLatestBalances().collect { accounts ->
                 _uiState.update { it.copy(allAccounts = accounts) }
             }
@@ -69,7 +70,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     fun loadBudgets() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 combine(
@@ -125,7 +126,7 @@ class BudgetViewModel @Inject constructor(
 
     fun selectBudget(budgetId: Long, startDate: String? = null, endDate: String? = null) {
         selectedBudgetCollectionJob?.cancel()
-        selectedBudgetCollectionJob = viewModelScope.launch {
+        selectedBudgetCollectionJob = viewModelScope.launch(Dispatchers.Default) {
             val effectiveCurrency = currencyRepository.effectiveBaseCurrencyCode.first()
             combine(
                 budgetRepository.getAllBudgetsWithSpending(),
@@ -193,7 +194,7 @@ class BudgetViewModel @Inject constructor(
 
         // Collect transactions for the selected budget
         transactionCollectionJob?.cancel()
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val budget = budgetRepository.getBudgetById(budgetId) ?: return@launch
             
             // Override dates if provided
@@ -206,7 +207,7 @@ class BudgetViewModel @Inject constructor(
                 } catch (e: Exception) { budget }
             } else budget
 
-            transactionCollectionJob = viewModelScope.launch {
+            transactionCollectionJob = viewModelScope.launch(Dispatchers.Default) {
                 combine(
                     budgetRepository.getTransactionsForBudget(collectionBudget),
                     currencyRepository.effectiveBaseCurrencyCode,
@@ -260,7 +261,7 @@ class BudgetViewModel @Inject constructor(
     // Edit budget state management
     fun initNewBudget() {
         val now = LocalDateTime.now()
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val currency = currencyRepository.baseCurrencyCode.first()
             _editBudgetState.value = EditBudgetState(
                 year = now.year,
@@ -273,7 +274,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     fun initEditBudget(budget: BudgetEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val limits = budgetRepository.getCategoryLimitsForBudgetSync(budget.id)
             _editBudgetState.value = EditBudgetState(
                 budgetId = budget.id,
@@ -357,7 +358,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     fun updateAccountIds(accountIds: List<String>) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val currency = if (accountIds.isEmpty()) {
                 currencyRepository.baseCurrencyCode.first()
             } else {
@@ -414,7 +415,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     fun saveBudget(onSuccess: () -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             try {
                 val state = _editBudgetState.value
                 val name = state.name.ifBlank { state.getDefaultName() }
@@ -488,7 +489,7 @@ class BudgetViewModel @Inject constructor(
     }
 
     fun deleteBudget(budgetId: Long, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             try {
                 budgetRepository.deleteBudget(budgetId)
                 loadBudgets()

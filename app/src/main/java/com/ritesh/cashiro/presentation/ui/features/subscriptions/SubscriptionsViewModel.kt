@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.ritesh.cashiro.data.repository.CurrencyRepository
@@ -56,7 +57,7 @@ class SubscriptionsViewModel @Inject constructor(
     }
     
     private fun loadSubscriptions() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             combine(
                 subscriptionRepository.getActiveSubscriptions(),
                 currencyRepository.effectiveBaseCurrencyCode,
@@ -107,7 +108,7 @@ class SubscriptionsViewModel @Inject constructor(
     }
     
     fun hideSubscription(subscriptionId: Long) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             subscriptionRepository.hideSubscription(subscriptionId)
             _uiState.value = _uiState.value.copy(
                 lastHiddenSubscription = _uiState.value.activeSubscriptions.find { it.id == subscriptionId }
@@ -117,7 +118,7 @@ class SubscriptionsViewModel @Inject constructor(
     
     fun undoHide() {
         _uiState.value.lastHiddenSubscription?.let { subscription ->
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.Default) {
                 subscriptionRepository.unhideSubscription(subscription.id)
                 _uiState.value = _uiState.value.copy(lastHiddenSubscription = null)
             }
@@ -129,7 +130,7 @@ class SubscriptionsViewModel @Inject constructor(
     }
 
     fun markAsPaid(subscription: SubscriptionEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val today = java.time.LocalDate.now()
             val nextDate = SubscriptionUtils.calculateNextPaymentDate(subscription.nextPaymentDate ?: today, subscription.billingCycle)
             subscriptionRepository.updatePaymentStatus(subscription.id, nextDate, today)

@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
+import com.ritesh.cashiro.BuildConfig
 import com.ritesh.cashiro.data.database.entity.AccountBalanceEntity
 import com.ritesh.cashiro.data.manager.SmsScanManager
 import com.ritesh.cashiro.data.preferences.UserPreferencesRepository
@@ -52,6 +53,10 @@ constructor(
     }
 
     private fun checkPermissionStatus() {
+        if (!BuildConfig.SMS_ENABLED) {
+            _uiState.update { it.copy(hasPermission = false, hasSkippedPermission = true) }
+            return
+        }
         val hasPermission =
                 ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) ==
                         PackageManager.PERMISSION_GRANTED

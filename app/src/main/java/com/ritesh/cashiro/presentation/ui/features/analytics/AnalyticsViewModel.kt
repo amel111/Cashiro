@@ -21,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -49,7 +50,7 @@ class AnalyticsViewModel @Inject constructor(
     val selectedCurrency: StateFlow<String?> = _selectedCurrency.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             var lastBaseCurrency: String? = null
             currencyRepository.effectiveBaseCurrencyCode.collectLatest { effectiveCurrency ->
                 if (lastBaseCurrency == null || effectiveCurrency != lastBaseCurrency) {

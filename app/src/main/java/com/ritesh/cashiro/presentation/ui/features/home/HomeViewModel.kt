@@ -13,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ritesh.cashiro.BuildConfig
 import com.ritesh.cashiro.data.currency.CurrencyConversionService
 import com.ritesh.cashiro.data.database.entity.AccountBalanceEntity
 import com.ritesh.cashiro.data.database.entity.TransactionEntity
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -126,7 +128,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadUserData() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             userPreferencesRepository.userPreferences.collect { preferences ->
                 _uiState.value = _uiState.value.copy(
                     userName = preferences.userName,
@@ -138,13 +140,13 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             unrecognizedSmsRepository.getUnreportedCount().collect { count ->
                 _uiState.value = _uiState.value.copy(unreadUpdatesCount = count)
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             combine(
                 userPreferencesRepository.homeWidgetsOrder,
                 userPreferencesRepository.hiddenHomeWidgets
@@ -180,7 +182,7 @@ class HomeViewModel @Inject constructor(
 
     private fun loadHomeData() {
         // Observe base currency changes
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             baseCurrency.collect { mainAccountCurrency ->
                 val prevCurrency = _uiState.value.selectedCurrency
                 if (mainAccountCurrency != prevCurrency) {
@@ -198,7 +200,7 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load current month breakdown by currency
             combine(
                 transactionRepository.getCurrentMonthBreakdownByCurrency(),
@@ -209,7 +211,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load account balances and react to currency changes
             combine(
                 accountBalanceRepository.getAllLatestBalances(),
@@ -299,7 +301,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load current month transactions by type (currency-filtered)
             val now = LocalDate.now()
             val startOfMonth = now.withDayOfMonth(1)
@@ -344,7 +346,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load heatmap data (last 26 weeks)
             val endOfHeatmap = LocalDate.now()
             val startOfHeatmap = endOfHeatmap.minusWeeks(26).with(java.time.DayOfWeek.MONDAY)
@@ -359,7 +361,7 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load last month breakdown by currency
             combine(
                 transactionRepository.getLastMonthBreakdownByCurrency(),
@@ -370,7 +372,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load current year breakdown by currency
             combine(
                 transactionRepository.getCurrentYearBreakdownByCurrency(),
@@ -381,7 +383,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load recent transactions (last 3) and react to base currency changes
             combine(
                 transactionRepository.getRecentTransactions(limit = 3),
@@ -403,7 +405,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load all active subscriptions and react to currency changes
             combine(
                 subscriptionRepository.getActiveSubscriptions(),
@@ -440,7 +442,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load active budgets for current month and react to currency changes
             val yearMonth = YearMonth.now()
             combine(
@@ -481,7 +483,7 @@ class HomeViewModel @Inject constructor(
             }.collectLatest { }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Load portfolio balance history for the last 180 days, reactive to currency changes
             val endDate = LocalDateTime.now()
             val startDate = endDate.minusDays(180)
@@ -536,13 +538,13 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             lendBorrowRepository.getSummary().collect { summary ->
                 _uiState.update { it.copy(lendBorrowSummary = summary) }
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             combine(
                 lendBorrowRepository.getAllTransactions(),
                 lendBorrowRepository.getPersons()
@@ -589,7 +591,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refreshHiddenAccounts() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Force re-read of hidden accounts from SharedPreferences
             val hiddenAccounts =
                 sharedPrefs.getStringSet("hidden_accounts", emptySet()) ?: emptySet()
@@ -627,6 +629,7 @@ class HomeViewModel @Inject constructor(
      *                    If false (default), performs an incremental scan for new messages only.
      */
     fun scanSmsMessages(forceResync: Boolean = false) {
+        if (!BuildConfig.SMS_ENABLED) return
         val inputData = workDataOf(
             OptimizedSmsReaderWorker.INPUT_FORCE_RESYNC to forceResync
         )
@@ -676,13 +679,14 @@ class HomeViewModel @Inject constructor(
     }
 
     fun cancelSmsScan() {
+        if (!BuildConfig.SMS_ENABLED) return
         val workManager = WorkManager.getInstance(context)
         workManager.cancelUniqueWork(OptimizedSmsReaderWorker.WORK_NAME)
         _uiState.value = _uiState.value.copy(isScanning = false)
     }
 
     fun refreshAccountBalances() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Force refresh the account balances by fetching once (prevents memory leaks)
             val allBalances = accountBalanceRepository.getAllLatestBalances().first()
             val hiddenAccounts = sharedPrefs.getStringSet("hidden_accounts", emptySet()) ?: emptySet()
@@ -750,7 +754,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun updateSystemPrompt() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             try {
                 llmRepository.updateSystemPrompt()
             } catch (e: Exception) {
@@ -778,7 +782,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun deleteTransaction(transaction: TransactionEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             _deletedTransaction.value = transaction
             transactionRepository.deleteTransaction(transaction)
         }
@@ -786,7 +790,7 @@ class HomeViewModel @Inject constructor(
 
     fun undoDelete() {
         _deletedTransaction.value?.let { transaction ->
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.Default) {
                 transactionRepository.undoDeleteTransaction(transaction)
                 _deletedTransaction.value = null
             }
@@ -794,7 +798,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun undoDeleteTransaction(transaction: TransactionEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             transactionRepository.undoDeleteTransaction(transaction)
         }
     }
@@ -808,7 +812,7 @@ class HomeViewModel @Inject constructor(
      * Should be called with the current activity context.
      */
     fun checkForInAppReview(activity: ComponentActivity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             // Get current transaction count as additional eligibility factor
             val transactionCount = transactionRepository.getAllTransactions().first().size
             inAppReviewManager.checkAndShowReviewIfEligible(activity, transactionCount)
@@ -896,13 +900,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun toggleBannerImage() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             userPreferencesRepository.updateShowBannerImage(!_uiState.value.showBannerImage)
         }
     }
 
     fun toggleHomeWidgetVisibility(widget: HomeWidget, visible: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val currentHidden = userPreferencesRepository.hiddenHomeWidgets.first().toMutableSet()
             if (visible) {
                 currentHidden.remove(widget)
@@ -917,7 +921,7 @@ class HomeViewModel @Inject constructor(
 
     fun updateWidgetsOrder(widgets: List<HomeWidget>) {
         saveOrderJob?.cancel()
-        saveOrderJob = viewModelScope.launch {
+        saveOrderJob = viewModelScope.launch(Dispatchers.Default) {
             // Debounce writes to avoid rapid DataStore updates and UI jank
             kotlinx.coroutines.delay(500)
             userPreferencesRepository.updateHomeWidgetsOrder(widgets)

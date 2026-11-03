@@ -104,6 +104,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.zIndex
+import com.ritesh.cashiro.BuildConfig
 import com.ritesh.cashiro.presentation.ui.theme.CashiroTheme
 import androidx.work.WorkInfo
 import androidx.compose.ui.geometry.CornerRadius
@@ -165,12 +166,16 @@ fun OnBoardingScreen(
             contract = ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
             if (uiState.currentStep == 2) {
-                val readSmsGranted = permissions[Manifest.permission.READ_SMS] == true
-                if (readSmsGranted) {
-                    onBoardingViewModel.onPermissionResult(true)
-                    onBoardingViewModel.nextStep()
+                if (BuildConfig.SMS_ENABLED) {
+                    val readSmsGranted = permissions[Manifest.permission.READ_SMS] == true
+                    if (readSmsGranted) {
+                        onBoardingViewModel.onPermissionResult(true)
+                        onBoardingViewModel.nextStep()
+                    } else {
+                        onBoardingViewModel.onPermissionDenied()
+                    }
                 } else {
-                    onBoardingViewModel.onPermissionDenied()
+                    onBoardingViewModel.nextStep()
                 }
             } else {
                 onBoardingViewModel.nextStep()
@@ -245,11 +250,15 @@ private fun OnBoardingScreenContent(
                     when (uiState.currentStep) {
                         1 -> onNext()
                         2 -> {
-                            val permissions = arrayOf(
-                                Manifest.permission.READ_SMS,
-                                Manifest.permission.RECEIVE_SMS
-                            )
-                            onRequestPermissions(permissions)
+                            if (BuildConfig.SMS_ENABLED) {
+                                val permissions = arrayOf(
+                                    Manifest.permission.READ_SMS,
+                                    Manifest.permission.RECEIVE_SMS
+                                )
+                                onRequestPermissions(permissions)
+                            } else {
+                                onNext()
+                            }
                         }
                         3 -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

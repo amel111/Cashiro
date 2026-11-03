@@ -68,6 +68,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.ritesh.cashiro.BuildConfig
 import com.ritesh.cashiro.R
 import com.ritesh.cashiro.core.Constants
 import com.ritesh.cashiro.presentation.effects.overScrollVertical
@@ -788,7 +789,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(1.5.dp)
                 ) {
-                    if (com.ritesh.cashiro.core.Constants.Device.is64Bit) {
+                    if (BuildConfig.AI_ENABLED && com.ritesh.cashiro.core.Constants.Device.is64Bit) {
                         ListItem(
                             headline = {
                                 Text(

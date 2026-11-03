@@ -33,6 +33,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.math.BigDecimal
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -309,7 +310,7 @@ class TransactionsViewModel @Inject constructor(
     
     init {
         // Observe the effective base currency dynamically
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             var lastBaseCurrency: String? = null
             baseCurrency.collectLatest { effectiveCurrency ->
                 if (lastBaseCurrency == null || effectiveCurrency != lastBaseCurrency) {
@@ -527,7 +528,7 @@ class TransactionsViewModel @Inject constructor(
     }
 
     fun deleteTransaction(transaction: TransactionEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             _deletedTransaction.value = transaction
             transactionRepository.deleteTransaction(transaction)
         }
@@ -535,7 +536,7 @@ class TransactionsViewModel @Inject constructor(
     
     fun undoDelete() {
         _deletedTransaction.value?.let { transaction ->
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.Default) {
                 transactionRepository.undoDeleteTransaction(transaction)
                 _deletedTransaction.value = null
             }
@@ -543,7 +544,7 @@ class TransactionsViewModel @Inject constructor(
     }
     
     fun undoDeleteTransaction(transaction: TransactionEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             transactionRepository.undoDeleteTransaction(transaction)
         }
     }
@@ -579,7 +580,7 @@ class TransactionsViewModel @Inject constructor(
     }
     
     fun deleteSelectedTransactions() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val selectedIds = _selectedTransactionIds.value
             if (selectedIds.isEmpty()) return@launch
             
@@ -594,7 +595,7 @@ class TransactionsViewModel @Inject constructor(
     }
     
     fun undoDeleteTransactions(transactions: List<TransactionEntity>) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             transactionRepository.undoDeleteTransactions(transactions)
         }
     }
@@ -617,7 +618,7 @@ class TransactionsViewModel @Inject constructor(
         newNote: String?,
         onComplete: () -> Unit = {}
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val currentTransactions = _uiState.value.transactions.filter { it.id in selectedIds }
             if (currentTransactions.isEmpty()) {
                 onComplete()

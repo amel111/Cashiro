@@ -9,6 +9,9 @@
         <!-- Set splash screen duration (Android 12+) -->
         <item name="windowSplashScreenAnimationDuration">1000</item>
         
+        <!-- Default splash icon (variants override this) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_logo_original_fg</item>
+
         <!-- Set the theme to use after splash screen -->
         <item name="postSplashScreenTheme">@style/Theme.CashiroCompose</item>
     </style>

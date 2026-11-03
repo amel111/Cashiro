@@ -68,26 +68,42 @@ android {
         create("fdroid") {
             dimension = "version"
             // F-Droid builds will use their own signing
+            buildConfigField("boolean", "AI_ENABLED", "true")
+            buildConfigField("boolean", "SMS_ENABLED", "true")
         }
         create("standard") {
             dimension = "version"
             isDefault = true
             // Standard flavor includes all architectures (including x86 for emulators)
+            buildConfigField("boolean", "AI_ENABLED", "true")
+            buildConfigField("boolean", "SMS_ENABLED", "true")
+        }
+        create("noai") {
+            dimension = "version"
+            // No-AI build: LiteRT-LM dependency and engine excluded, Chat UI hidden
+            buildConfigField("boolean", "AI_ENABLED", "false")
+            buildConfigField("boolean", "SMS_ENABLED", "true")
+        }
+        create("nosms") {
+            dimension = "version"
+            // No-SMS + No-AI build: SMS ingestion/permissions excluded, AI excluded
+            buildConfigField("boolean", "AI_ENABLED", "false")
+            buildConfigField("boolean", "SMS_ENABLED", "false")
         }
     }
 
     splits {
         abi {
-            // Disable splits for bundle builds (AABs) and fdroid flavor builds.
+            // Disable splits for bundle builds (AABs) and fdroid/noai flavor builds.
             // F-Droid expects exactly one APK output — splits cause the build to fail.
             //noinspection WrongGradleMethod
             val runTasks = gradle.startParameter.taskNames.map { it.lowercase() }
             //noinspection WrongGradleMethod
             val isBundleBuild = runTasks.any { it.contains("bundle") }
             //noinspection WrongGradleMethod
-            val isFdroidBuild = runTasks.any { it.contains("fdroid") }
+            val isSingleApkBuild = runTasks.any { it.contains("fdroid") || it.contains("noai") || it.contains("nosms") }
 
-            isEnable = !isBundleBuild && !isFdroidBuild
+            isEnable = !isBundleBuild && !isSingleApkBuild
 
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
@@ -219,8 +235,9 @@ dependencies {
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
     
-    // LiteRT-LM for on-device LLM inference
-    implementation(libs.litertlm.android)
+    // LiteRT-LM for on-device LLM inference (excluded from the noai flavor)
+    "standardImplementation"(libs.litertlm.android)
+    "fdroidImplementation"(libs.litertlm.android)
 
     
     // Google Play In-App Updates (only for standard flavor)

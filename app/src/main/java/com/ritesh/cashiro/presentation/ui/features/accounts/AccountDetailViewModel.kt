@@ -22,6 +22,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -72,7 +73,7 @@ class AccountDetailViewModel @Inject constructor(
     }
     
     private fun observeTransactions() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             combine(
                 selectedDateRange,
                 transactionRepository.getTransactionsByAccount(bankName, accountLast4),
@@ -180,7 +181,7 @@ class AccountDetailViewModel @Inject constructor(
     }
     
     private fun observeBalanceHistory() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             accountBalanceRepository.getLatestBalanceFlow(bankName, accountLast4)
                 .collect { latestBalance ->
                     _uiState.update { state ->
@@ -189,7 +190,7 @@ class AccountDetailViewModel @Inject constructor(
                 }
         }
         
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             selectedDateRange.flatMapLatest { dateRange ->
                 val (startDate, endDate) = getDateRangeValues(dateRange)
                 accountBalanceRepository.getBalanceHistory(
@@ -207,7 +208,7 @@ class AccountDetailViewModel @Inject constructor(
     }
     
     private fun observeBalanceChartData() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             combine(selectedDateRange, currencyConversionService.rateChangeTrigger) { dateRange, _ -> dateRange }
                 .flatMapLatest { dateRange ->
                 val (startDate, endDate) = getDateRangeValues(dateRange)

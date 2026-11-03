@@ -44,6 +44,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +82,7 @@ import com.ritesh.cashiro.presentation.ui.features.budgets.BudgetDetailScreen
 import com.ritesh.cashiro.presentation.ui.features.budgets.BudgetHistoryScreen
 import com.ritesh.cashiro.presentation.ui.features.budgets.BudgetsScreen
 import com.ritesh.cashiro.presentation.ui.features.categories.CategoriesScreen
+import com.ritesh.cashiro.BuildConfig
 import com.ritesh.cashiro.presentation.ui.features.chat.ChatScreen
 import com.ritesh.cashiro.presentation.ui.features.contacts.ContactsScreen
 import com.ritesh.cashiro.presentation.ui.features.home.HomeScreen
@@ -228,7 +230,9 @@ fun CashiroNavHost(
                     HomeScreen(
                         navController = navController,
                         onNavigateToSettings = { navController.safeNavigate(Settings) },
-                        onNavigateToChat = { navController.safeNavigate(Chat) },
+                        onNavigateToChat = {
+                            if (BuildConfig.AI_ENABLED) navController.safeNavigate(Chat)
+                        },
                         onNavigateToTransactions = { navController.safeNavigate(Transactions()) },
                         onNavigateToTransactionsWithSearch = {
                             navController.safeNavigate(Transactions(focusSearch = true))
@@ -248,7 +252,7 @@ fun CashiroNavHost(
                         onTransactionClick = { transactionId, key ->
                             navController.safeNavigate(TransactionDetail(transactionId, key))
                         },
-                        onFullResyncClick = { showFullResyncDialog = true },
+                        onFullResyncClick = { if (BuildConfig.SMS_ENABLED) showFullResyncDialog = true },
                         animatedContentScope = this@composable,
                     )
                 }
@@ -283,6 +287,11 @@ fun CashiroNavHost(
                     popEnterTransition = CashiroTransitions.verticalSlidePopEnter,
                     popExitTransition = CashiroTransitions.verticalSlidePopExit
                 ) {
+                    if (!BuildConfig.AI_ENABLED) {
+                        // Defensive: no AI build must never render Chat (all entry points hidden)
+                        LaunchedEffect(Unit) { navController.safePopBackStack() }
+                        return@composable
+                    }
                     ChatScreen(
                         modifier = Modifier.imePadding(),
                         onNavigateToSettings = { navController.safeNavigate(Settings) },
@@ -830,7 +839,7 @@ fun CashiroNavHost(
                                 onClick = {
                                     if (isHomeScreen) {
                                         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                                        homeViewModel.scanSmsMessages()
+                                        if (BuildConfig.SMS_ENABLED) homeViewModel.scanSmsMessages()
                                     } else if (isTransactionsScreen) {
                                         showExportDialog = true
                                     }
@@ -841,7 +850,7 @@ fun CashiroNavHost(
                                             detectTapGestures(
                                                 onLongPress = {
                                                     view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                                                    showFullResyncDialog = true
+                                                    if (BuildConfig.SMS_ENABLED) showFullResyncDialog = true
                                                 }
                                             )
                                         } else {
@@ -978,7 +987,7 @@ fun CashiroNavHost(
                                 Button(
                                     onClick = {
                                         showFullResyncDialog = false
-                                        homeViewModel.scanSmsMessages(
+                                        if (BuildConfig.SMS_ENABLED) homeViewModel.scanSmsMessages(
                                             forceResync = true
                                         )
                                     },
@@ -1042,8 +1051,8 @@ fun CashiroNavHost(
             SmsParsingProgressDialog(
                 isVisible = homeUiState.isScanning,
                 workInfo = smsScanWorkInfo,
-                onDismiss = { homeViewModel.cancelSmsScan() },
-                onCancel = { homeViewModel.cancelSmsScan() },
+                onDismiss = { if (BuildConfig.SMS_ENABLED) homeViewModel.cancelSmsScan() },
+                onCancel = { if (BuildConfig.SMS_ENABLED) homeViewModel.cancelSmsScan() },
                 blurEffects = themeUiState.blurEffects,
                 hazeState = hazeState
             )
@@ -1090,12 +1099,12 @@ fun CashiroNavHost(
                                         onClick = {
                                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                                             dismiss()
-                                            homeViewModel.scanSmsMessages()
+                                            if (BuildConfig.SMS_ENABLED) homeViewModel.scanSmsMessages()
                                         },
                                         onLongClick = {
                                             view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                                             dismiss()
-                                            showFullResyncDialog = true
+                                            if (BuildConfig.SMS_ENABLED) showFullResyncDialog = true
                                         }
                                     )
                                     .padding(MenuDefaults.DropdownMenuItemContentPadding),
@@ -1120,7 +1129,7 @@ fun CashiroNavHost(
                                 color = MaterialTheme.colorScheme.surface.copy(0.6f)
                             )
 
-                            if (com.ritesh.cashiro.core.Constants.Device.is64Bit) {
+                            if (BuildConfig.AI_ENABLED && com.ritesh.cashiro.core.Constants.Device.is64Bit) {
                                 DropdownMenuItem(
                                     text = { Text(
                                         text = askAiLbl,
@@ -1163,7 +1172,7 @@ fun CashiroNavHost(
                                 thickness = 1.5.dp,
                                 color = MaterialTheme.colorScheme.surface.copy(0.6f)
                             )
-                            if (com.ritesh.cashiro.core.Constants.Device.is64Bit) {
+                            if (BuildConfig.AI_ENABLED && com.ritesh.cashiro.core.Constants.Device.is64Bit) {
                                 DropdownMenuItem(
                                     text = { Text(askAiLbl) },
                                     onClick = {

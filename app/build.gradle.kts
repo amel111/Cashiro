@@ -14,7 +14,7 @@ plugins {
 android {
     namespace = "com.ritesh.cashiro"
     compileSdk = 36
-    
+
     buildFeatures {
         buildConfig = true
     }
@@ -26,20 +26,20 @@ android {
         versionName = "2.1.61-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
+
         // Load RSA public key from local.properties
         val localPropertiesFile = rootProject.file("local.properties")
         if (localPropertiesFile.exists()) {
             val localProperties = Properties()
             localProperties.load(localPropertiesFile.inputStream())
-            
+
             val rsaPublicKey = localProperties.getProperty("RSA_PUBLIC_KEY", "")
             buildConfigField("String", "RSA_PUBLIC_KEY", "\"$rsaPublicKey\"")
         } else {
             // Fallback empty key for CI/CD builds
             buildConfigField("String", "RSA_PUBLIC_KEY", "\"\"")
         }
-        
+
 
     }
 
@@ -51,7 +51,7 @@ android {
             if (localPropertiesFile.exists()) {
                 val localProperties = Properties()
                 localProperties.load(localPropertiesFile.inputStream())
-                
+
                 val keystorePath = localProperties.getProperty("RELEASE_STORE_FILE", "")
                 if (keystorePath.isNotEmpty()) {
                     storeFile = file(keystorePath)
@@ -62,7 +62,7 @@ android {
             }
         }
     }
-    
+
     flavorDimensions += "version"
     productFlavors {
         create("fdroid") {
@@ -101,7 +101,7 @@ android {
             //noinspection WrongGradleMethod
             val isBundleBuild = runTasks.any { it.contains("bundle") }
             //noinspection WrongGradleMethod
-            val isSingleApkBuild = runTasks.any { it.contains("fdroid") || it.contains("noai") || it.contains("nosms") }
+            val isSingleApkBuild = runTasks.any { it.contains("fdroid") || it.contains("noai") }
 
             isEnable = !isBundleBuild && !isSingleApkBuild
 
@@ -121,7 +121,7 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-            
+
             // Include debug symbols for native crashes
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
@@ -182,14 +182,14 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    
+
     // Color Picker for Compose
     implementation(libs.colorpicker.compose)
     implementation(libs.haze)
-    
+
     // Splash Screen API
     implementation(libs.androidx.core.splashscreen)
-    
+
     // Lifecycle and ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -197,7 +197,7 @@ dependencies {
     // Navigation
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.navigation.compose)
-    
+
     // Kotlin Serialization
     implementation(libs.kotlinx.serialization.json)
 
@@ -206,10 +206,10 @@ dependencies {
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    
+
     // Gson for backup/restore
     implementation(libs.gson)
-    
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
@@ -222,32 +222,32 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-    
+
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    
+
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
-    
+
     // Hilt WorkManager integration
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
-    
+
     // LiteRT-LM for on-device LLM inference (excluded from the noai flavor)
     "standardImplementation"(libs.litertlm.android)
     "fdroidImplementation"(libs.litertlm.android)
 
-    
+
     // Google Play In-App Updates (only for standard flavor)
     "standardImplementation"(libs.app.update)
     "standardImplementation"(libs.app.update.ktx)
-    
+
     // Google Play In-App Reviews (only for standard flavor)
     "standardImplementation"(libs.review)
     "standardImplementation"(libs.review.ktx)
-    
+
     testImplementation(libs.junit)
     testImplementation(libs.androidx.room.testing)
     testImplementation(libs.ktor.client.mock)
@@ -259,12 +259,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     implementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    
+
     // Markdown support
     implementation(libs.markdown)
     implementation(libs.mikepenz.markdown.renderer)
     implementation(libs.mikepenz.markdown.renderer.m3)
-    
+
     // OpenCSV for CSV export
     implementation(libs.opencsv)
     testImplementation(kotlin("test"))

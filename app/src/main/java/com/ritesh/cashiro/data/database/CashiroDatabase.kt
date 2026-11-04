@@ -85,7 +85,7 @@ import com.ritesh.cashiro.data.database.entity.WebhookProfileEntity
             com.ritesh.cashiro.data.database.entity.LendBorrowPersonEntity::class,
             com.ritesh.cashiro.data.database.entity.LendBorrowTransactionEntity::class
         ],
-        version = 62,
+        version = 63,
     exportSchema = true,
     autoMigrations =
         [
@@ -109,7 +109,7 @@ import com.ritesh.cashiro.data.database.entity.WebhookProfileEntity
             AutoMigration(from = 44, to = 45, spec = Migration44To45::class),
             AutoMigration(from = 45, to = 46, spec = Migration45To46::class),
             AutoMigration(from = 46, to = 47, spec = Migration46To47::class),
-            AutoMigration(from = 47, to = 48)
+            AutoMigration(from = 47, to = 48),
         ]
 )
 @TypeConverters(Converters::class)
@@ -172,12 +172,56 @@ MIGRATION_55_56,
                                 MIGRATION_57_58,
                                 MIGRATION_58_59,
                                 MIGRATION_59_60,
-                                MIGRATION_60_61
+                                MIGRATION_60_61,
+                                MIGRATION_62_63
                             )
                             .build()
                     INSTANCE = instance
                     instance
                 }
+        }
+
+        val MIGRATION_62_63 = object : Migration(62, 63) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE budgets RENAME TO budgets_old")
+                db.execSQL(
+                    """
+                    CREATE TABLE budgets (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        amount TEXT NOT NULL,
+                        year INTEGER NOT NULL,
+                        month INTEGER NOT NULL,
+                        currency TEXT NOT NULL DEFAULT 'INR',
+                        is_active INTEGER NOT NULL DEFAULT 1,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        start_date TEXT NOT NULL DEFAULT '',
+                        end_date TEXT NOT NULL DEFAULT '',
+                        period_type TEXT NOT NULL DEFAULT 'MONTHLY',
+                        budget_type TEXT NOT NULL DEFAULT 'EXPENSE',
+                        account_ids TEXT NOT NULL DEFAULT '',
+                        color TEXT NOT NULL DEFAULT '#4CAF50',
+                        is_sample INTEGER NOT NULL DEFAULT 0
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO budgets (
+                        id, name, amount, year, month, currency, is_active,
+                        created_at, updated_at, start_date, end_date, period_type,
+                        budget_type, account_ids, color, is_sample
+                    )
+                    SELECT
+                        id, name, amount, year, month, currency, is_active,
+                        created_at, updated_at, start_date, end_date, period_type,
+                        budget_type, account_ids, color, is_sample
+                    FROM budgets_old
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE budgets_old")
+            }
         }
 
         /**

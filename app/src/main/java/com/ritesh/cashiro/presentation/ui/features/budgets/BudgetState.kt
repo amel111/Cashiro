@@ -4,7 +4,6 @@ import com.ritesh.cashiro.data.database.entity.AccountBalanceEntity
 import com.ritesh.cashiro.data.repository.BudgetWithSpending
 import com.ritesh.cashiro.data.repository.CategoryLimitWithSpending
 import com.ritesh.cashiro.data.database.entity.BudgetPeriod
-import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.database.entity.TransactionEntity
 import com.ritesh.cashiro.domain.model.PersonInfo
@@ -36,7 +35,6 @@ data class EditBudgetState(
     val startDate: LocalDateTime = LocalDateTime.now(),
     val endDate: LocalDateTime = LocalDateTime.now().plusDays(7).minusNanos(1),
     val periodType: BudgetPeriod = BudgetPeriod.WEEKLY,
-    val trackType: BudgetTrackType = BudgetTrackType.ALL_TRANSACTIONS,
     val budgetType: BudgetType = BudgetType.EXPENSE,
     val accountIds: List<String> = emptyList(),
     val color: String = "#4CAF50",

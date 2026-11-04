@@ -619,7 +619,6 @@ class CashewImporter @Inject constructor(
                             4 -> BudgetPeriod.YEARLY
                             else -> BudgetPeriod.MONTHLY
                         },
-                        trackType = BudgetTrackType.ALL_TRANSACTIONS,
                         budgetType = if (budget.isIncome) BudgetType.SAVINGS else BudgetType.EXPENSE,
                         accountIds = accountIds,
                         color = "#4CAF50"

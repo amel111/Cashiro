@@ -78,7 +78,6 @@ import androidx.core.graphics.toColorInt
 import com.ritesh.cashiro.R
 import com.ritesh.cashiro.data.database.entity.AccountBalanceEntity
 import com.ritesh.cashiro.data.database.entity.BudgetPeriod
-import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.database.entity.CategoryEntity
 import com.ritesh.cashiro.data.database.entity.SubcategoryEntity
@@ -121,7 +120,6 @@ fun EditBudgetSheet(
     onStartDateChange: (LocalDateTime) -> Unit,
     onEndDateChange: (LocalDateTime) -> Unit,
     onPeriodTypeChange: (BudgetPeriod) -> Unit,
-    onTrackTypeChange: (BudgetTrackType) -> Unit,
     onBudgetTypeChange: (BudgetType) -> Unit,
     onAccountIdsChange: (List<String>) -> Unit,
     onColorChange: (String) -> Unit,
@@ -142,7 +140,6 @@ fun EditBudgetSheet(
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var pendingCategoryName by remember { mutableStateOf<String?>(null) }
     var showTypeInfoSheet by remember { mutableStateOf(false) }
-    var showTrackInfoSheet by remember { mutableStateOf(false) }
     
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -326,26 +323,6 @@ fun EditBudgetSheet(
         }
     }
 
-    if (showTrackInfoSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showTrackInfoSheet = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            BudgetTrackTypeSelectionSheet(
-                onTrackTypeSelected = {
-                    scope.launch {
-                        sheetState.hide()
-                        onTrackTypeChange(it)
-                        showTrackInfoSheet = false
-                    }
-                },
-                onDismiss = { showTrackInfoSheet = false }
-            )
-        }
-    }
-    
     Box(modifier = Modifier.fillMaxWidth().hazeSource(hazeState)) {
         Column(
             modifier = Modifier
@@ -466,63 +443,13 @@ fun EditBudgetSheet(
                 }
             }
             
-            // Budget Type and Tracking
+            // Budget Type
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Tracking Mode
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.track),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.Rounded.Info,
-                            contentDescription = stringResource(R.string.track_info),
-                            modifier = Modifier
-                                .size(14.dp)
-                                .clickable { showTrackInfoSheet = true },
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                        )
-                    }
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        SegmentedButton(
-                            selected = budgetState.trackType == BudgetTrackType.ADDED_ONLY,
-                            onClick = { onTrackTypeChange(BudgetTrackType.ADDED_ONLY) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                            colors = SegmentedButtonDefaults.colors(
-                                inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                inactiveContentColor = MaterialTheme.colorScheme.onSurface,
-                                inactiveBorderColor = Color.Transparent,
-                                activeBorderColor = Color.Transparent
-                            ),
-                            label = { Text(stringResource(R.string.added), fontSize = 11.sp) }
-                        )
-                        SegmentedButton(
-                            selected = budgetState.trackType == BudgetTrackType.ALL_TRANSACTIONS,
-                            onClick = { onTrackTypeChange(BudgetTrackType.ALL_TRANSACTIONS) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                            colors = SegmentedButtonDefaults.colors(
-                                inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                inactiveContentColor = MaterialTheme.colorScheme.onSurface,
-                                inactiveBorderColor = Color.Transparent,
-                                activeBorderColor = Color.Transparent
-                            ),
-                            label = { Text(stringResource(R.string.all), fontSize = 11.sp) }
-                        )
-                    }
-                }
-
                 // Budget Type
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(bottom = 8.dp)

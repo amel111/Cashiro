@@ -5,7 +5,6 @@ import com.ritesh.cashiro.data.database.dao.TransactionDao
 import com.ritesh.cashiro.data.database.entity.BudgetCategoryLimitEntity
 import com.ritesh.cashiro.data.database.entity.BudgetEntity
 import com.ritesh.cashiro.data.database.entity.BudgetPeriod
-import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.database.entity.TransactionEntity
 import com.ritesh.cashiro.data.database.entity.TransactionType
@@ -194,9 +193,7 @@ class BudgetRepository @Inject constructor(
         }
         
         // Filter by tracking type
-        if (budget.trackType == BudgetTrackType.ADDED_ONLY || budget.periodType == BudgetPeriod.WEEKLY) {
-            transactions = transactions.filter { it.smsBody.isNullOrBlank() }
-        }
+        transactions = transactions.filter { it.smsBody.isNullOrBlank() }
         
         // Filter by accounts if specified
         if (budget.accountIds.isNotEmpty()) {
@@ -309,9 +306,7 @@ class BudgetRepository @Inject constructor(
         }
         
         // Filter by tracking type
-        if (budget.trackType == BudgetTrackType.ADDED_ONLY || budget.periodType == BudgetPeriod.WEEKLY) {
-            transactions = transactions.filter { it.smsBody.isNullOrBlank() }
-        }
+        transactions = transactions.filter { it.smsBody.isNullOrBlank() }
         
         // Filter by accounts if specified
         if (budget.accountIds.isNotEmpty()) {
@@ -397,9 +392,7 @@ class BudgetRepository @Inject constructor(
                 }
                 
                 // Filter by tracking type
-                if (budget.trackType == BudgetTrackType.ADDED_ONLY || budget.periodType == BudgetPeriod.WEEKLY) {
-                    filtered = filtered.filter { it.smsBody.isNullOrBlank() }
-                }
+                filtered = filtered.filter { it.smsBody.isNullOrBlank() }
                 
                 // Filter by accounts if specified
                 if (budget.accountIds.isNotEmpty()) {

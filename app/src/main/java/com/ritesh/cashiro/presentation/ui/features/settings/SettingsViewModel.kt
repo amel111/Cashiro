@@ -57,7 +57,6 @@ import com.ritesh.cashiro.data.database.entity.CardEntity
 import com.ritesh.cashiro.data.database.entity.CardType
 import com.ritesh.cashiro.data.database.entity.BudgetEntity
 import com.ritesh.cashiro.data.database.entity.BudgetPeriod
-import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.database.entity.TransactionEntity
 import com.ritesh.cashiro.data.database.entity.TransactionType
@@ -796,7 +795,6 @@ class SettingsViewModel @Inject constructor(
                         startDate = foodBudgetStart,
                         endDate = foodBudgetStart.plusMonths(1).minusSeconds(1),
                         periodType = BudgetPeriod.MONTHLY,
-                        trackType = BudgetTrackType.ALL_TRANSACTIONS,
                         budgetType = BudgetType.EXPENSE,
                         createdAt = now.minusMonths(3).withDayOfMonth(1), // History from 3 months ago
                         color = "#FF9800", // Orange
@@ -851,7 +849,6 @@ class SettingsViewModel @Inject constructor(
                         startDate = weeklyStart,
                         endDate = weeklyStart.plusWeeks(1).minusSeconds(1),
                         periodType = BudgetPeriod.WEEKLY,
-                        trackType = BudgetTrackType.ALL_TRANSACTIONS,
                         budgetType = BudgetType.EXPENSE,
                         createdAt = now.minusWeeks(4), // History from 4 weeks ago
                         isSample = true,
@@ -901,7 +898,6 @@ class SettingsViewModel @Inject constructor(
                         startDate = savingsStart,
                         endDate = savingsStart.plusYears(2), // 2 year goal
                         periodType = BudgetPeriod.CUSTOM,
-                        trackType = BudgetTrackType.ALL_TRANSACTIONS,
                         budgetType = BudgetType.SAVINGS,
                         createdAt = now,
                         color = "#4CAF50", // Green

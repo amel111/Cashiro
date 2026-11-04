@@ -7,7 +7,6 @@ import com.ritesh.cashiro.data.repository.BudgetRepository
 import com.ritesh.cashiro.data.repository.CategoryLimitWithSpending
 import com.ritesh.cashiro.data.database.dao.AccountBalanceDao
 import com.ritesh.cashiro.data.database.entity.BudgetPeriod
-import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.repository.CurrencyRepository
 import com.ritesh.cashiro.data.repository.LendBorrowRepository
@@ -273,7 +272,6 @@ class BudgetViewModel @Inject constructor(
                 startDate = now,
                 endDate = now.plusDays(7).minusNanos(1),
                 periodType = BudgetPeriod.WEEKLY,
-                trackType = BudgetTrackType.ADDED_ONLY,
                 currency = currency
             )
         }
@@ -291,7 +289,6 @@ class BudgetViewModel @Inject constructor(
                 startDate = budget.startDate,
                 endDate = budget.endDate,
                 periodType = budget.periodType,
-                trackType = budget.trackType,
                 budgetType = budget.budgetType,
                 accountIds = budget.accountIds,
                 color = budget.color,
@@ -353,10 +350,6 @@ class BudgetViewModel @Inject constructor(
                 endDate = newEndDate
             )
         }
-    }
-
-    fun updateTrackType(trackType: BudgetTrackType) {
-        _editBudgetState.update { it.copy(trackType = trackType) }
     }
 
     fun updateBudgetType(budgetType: BudgetType) {
@@ -439,7 +432,6 @@ class BudgetViewModel @Inject constructor(
                                 startDate = state.startDate,
                                 endDate = state.endDate,
                                 periodType = state.periodType,
-                                trackType = state.trackType,
                                 budgetType = state.budgetType,
                                 accountIds = state.accountIds,
                                 color = state.color,
@@ -467,7 +459,6 @@ class BudgetViewModel @Inject constructor(
                         startDate = state.startDate,
                         endDate = state.endDate,
                         periodType = state.periodType,
-                        trackType = state.trackType,
                         budgetType = state.budgetType,
                         accountIds = state.accountIds,
                         color = state.color,

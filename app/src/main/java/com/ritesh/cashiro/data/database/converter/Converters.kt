@@ -4,7 +4,6 @@ import androidx.room.TypeConverter
 import com.ritesh.cashiro.data.database.entity.SubscriptionState
 import com.ritesh.cashiro.data.database.entity.TransactionType
 import com.ritesh.cashiro.data.database.entity.BudgetPeriod
-import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.database.entity.WebhookDataType
 import com.ritesh.cashiro.data.database.entity.WebhookLogStatus
@@ -101,20 +100,6 @@ class Converters {
             BudgetPeriod.valueOf(value)
         } catch (e: Exception) {
             BudgetPeriod.MONTHLY
-        }
-    }
-
-    @TypeConverter
-    fun fromBudgetTrackType(value: BudgetTrackType): String {
-        return value.name
-    }
-
-    @TypeConverter
-    fun toBudgetTrackType(value: String): BudgetTrackType {
-        return try {
-            BudgetTrackType.valueOf(value)
-        } catch (e: Exception) {
-            BudgetTrackType.ALL_TRANSACTIONS
         }
     }
 

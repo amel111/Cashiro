@@ -50,9 +50,6 @@ data class BudgetEntity(
     @ColumnInfo(name = "period_type", defaultValue = "MONTHLY")
     val periodType: BudgetPeriod = BudgetPeriod.MONTHLY,
 
-    @ColumnInfo(name = "track_type", defaultValue = "ALL_TRANSACTIONS")
-    val trackType: BudgetTrackType = BudgetTrackType.ALL_TRANSACTIONS,
-
     @ColumnInfo(name = "budget_type", defaultValue = "EXPENSE")
     val budgetType: BudgetType = BudgetType.EXPENSE,
 
@@ -72,11 +69,6 @@ enum class BudgetPeriod {
     WEEKLY,
     MONTHLY,
     YEARLY
-}
-
-enum class BudgetTrackType {
-    ADDED_ONLY,
-    ALL_TRANSACTIONS
 }
 
 enum class BudgetType {

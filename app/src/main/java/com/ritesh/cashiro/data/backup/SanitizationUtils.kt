@@ -133,7 +133,6 @@ fun BudgetEntity.sanitize(): BudgetEntity {
         startDate = startDate ?: LocalDateTime.now(),
         endDate = endDate ?: (startDate ?: LocalDateTime.now()).plusMonths(1),
         periodType = periodType ?: BudgetPeriod.MONTHLY,
-        trackType = trackType ?: BudgetTrackType.ALL_TRANSACTIONS,
         budgetType = budgetType ?: BudgetType.EXPENSE,
         accountIds = accountIds ?: emptyList(),
         color = color ?: "#4CAF50",

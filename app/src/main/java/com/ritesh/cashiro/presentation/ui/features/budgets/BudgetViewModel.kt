@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -493,9 +494,13 @@ class BudgetViewModel @Inject constructor(
             try {
                 budgetRepository.deleteBudget(budgetId)
                 loadBudgets()
-                onSuccess()
+                withContext(Dispatchers.Main.immediate) {
+                    onSuccess()
+                }
             } catch (e: Exception) {
-                onError(e.message ?: "Failed to delete budget")
+                withContext(Dispatchers.Main.immediate) {
+                    onError(e.message ?: "Failed to delete budget")
+                }
             }
         }
     }

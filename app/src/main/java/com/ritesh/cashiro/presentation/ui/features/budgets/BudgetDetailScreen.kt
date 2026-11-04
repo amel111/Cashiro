@@ -101,6 +101,7 @@ fun SharedTransitionScope.BudgetDetailScreen(
     }
 
     var showEditSheet by remember { mutableStateOf(false) }
+    var deleteNavigationHandled by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Load budget data
@@ -159,9 +160,12 @@ fun SharedTransitionScope.BudgetDetailScreen(
                         budgetViewModel.deleteBudget(
                             budgetId = currentId,
                             onSuccess = {
-                                showEditSheet = false
-                                budgetViewModel.clearEditState()
-                                onNavigateBack()
+                                if (!deleteNavigationHandled) {
+                                    deleteNavigationHandled = true
+                                    showEditSheet = false
+                                    budgetViewModel.clearEditState()
+                                    onNavigateBack()
+                                }
                             },
                             onError = { /* TODO: Show error */ }
                         )

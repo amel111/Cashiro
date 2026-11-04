@@ -4,6 +4,7 @@ import com.ritesh.cashiro.data.database.dao.BudgetDao
 import com.ritesh.cashiro.data.database.dao.TransactionDao
 import com.ritesh.cashiro.data.database.entity.BudgetCategoryLimitEntity
 import com.ritesh.cashiro.data.database.entity.BudgetEntity
+import com.ritesh.cashiro.data.database.entity.BudgetPeriod
 import com.ritesh.cashiro.data.database.entity.BudgetTrackType
 import com.ritesh.cashiro.data.database.entity.BudgetType
 import com.ritesh.cashiro.data.database.entity.TransactionEntity
@@ -22,6 +23,7 @@ import java.math.RoundingMode
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -173,9 +175,11 @@ class BudgetRepository @Inject constructor(
     }
 
     // Spending calculation methods
-    suspend fun getBudgetWithSpending(budget: BudgetEntity): BudgetWithSpending {
-        val startDate = budget.startDate
-        val endDate = budget.endDate
+    suspend fun getBudgetWithSpending(
+        budget: BudgetEntity,
+        useRecurringPeriod: Boolean = true
+    ): BudgetWithSpending {
+        val (startDate, endDate) = effectivePeriod(budget, useRecurringPeriod)
         val now = LocalDateTime.now()
 
         // Get transactions for the budget period
@@ -190,7 +194,7 @@ class BudgetRepository @Inject constructor(
         }
         
         // Filter by tracking type
-        if (budget.trackType == BudgetTrackType.ADDED_ONLY) {
+        if (budget.trackType == BudgetTrackType.ADDED_ONLY || budget.periodType == BudgetPeriod.WEEKLY) {
             transactions = transactions.filter { it.smsBody.isNullOrBlank() }
         }
         
@@ -260,9 +264,10 @@ class BudgetRepository @Inject constructor(
             budgetDao.getAllCategoryLimits()
         ) { budgets, transactions, categoryLimits ->
             budgets.filter { budget ->
+                val (budgetStart, budgetEnd) = effectivePeriod(budget)
                 budget.isActive && (
-                    (budget.startDate.isBefore(endOfMonth) || budget.startDate.isEqual(endOfMonth)) &&
-                    (budget.endDate.isAfter(startOfMonth) || budget.endDate.isEqual(startOfMonth))
+                    (budgetStart.isBefore(endOfMonth) || budgetStart.isEqual(endOfMonth)) &&
+                    (budgetEnd.isAfter(startOfMonth) || budgetEnd.isEqual(startOfMonth))
                 )
             }.map { budget ->
                 calculateSpending(budget, transactions, categoryLimits)
@@ -287,8 +292,7 @@ class BudgetRepository @Inject constructor(
         allTransactions: List<TransactionEntity>,
         allCategoryLimits: List<BudgetCategoryLimitEntity>
     ): BudgetWithSpending {
-        val startDate = budget.startDate
-        val endDate = budget.endDate
+        val (startDate, endDate) = effectivePeriod(budget)
         val now = LocalDateTime.now()
 
         // Filter transactions for this specific budget (already excludes deleted by DAO)
@@ -305,7 +309,7 @@ class BudgetRepository @Inject constructor(
         }
         
         // Filter by tracking type
-        if (budget.trackType == BudgetTrackType.ADDED_ONLY) {
+        if (budget.trackType == BudgetTrackType.ADDED_ONLY || budget.periodType == BudgetPeriod.WEEKLY) {
             transactions = transactions.filter { it.smsBody.isNullOrBlank() }
         }
         
@@ -379,8 +383,7 @@ class BudgetRepository @Inject constructor(
     }
 
     fun getTransactionsForBudget(budget: BudgetEntity): Flow<List<TransactionEntity>> {
-        val startDate = budget.startDate
-        val endDate = budget.endDate
+        val (startDate, endDate) = effectivePeriod(budget)
 
         return transactionDao.getTransactionsBetweenDates(startDate, endDate)
             .map { transactions ->
@@ -394,7 +397,7 @@ class BudgetRepository @Inject constructor(
                 }
                 
                 // Filter by tracking type
-                if (budget.trackType == BudgetTrackType.ADDED_ONLY) {
+                if (budget.trackType == BudgetTrackType.ADDED_ONLY || budget.periodType == BudgetPeriod.WEEKLY) {
                     filtered = filtered.filter { it.smsBody.isNullOrBlank() }
                 }
                 
@@ -417,5 +420,26 @@ class BudgetRepository @Inject constructor(
                 
                 filtered
             }
+    }
+
+    private fun effectivePeriod(
+        budget: BudgetEntity,
+        useRecurringPeriod: Boolean = true
+    ): Pair<LocalDateTime, LocalDateTime> {
+        if (!useRecurringPeriod || budget.periodType != BudgetPeriod.WEEKLY) {
+            return budget.startDate to budget.endDate
+        }
+
+        val now = LocalDateTime.now()
+        if (now.isBefore(budget.startDate)) {
+            return budget.startDate to budget.startDate.plusDays(7).minusNanos(1)
+        }
+
+        val elapsedWeeks = ChronoUnit.WEEKS.between(
+            budget.startDate.toLocalDate(),
+            now.toLocalDate()
+        )
+        val start = budget.startDate.plusWeeks(elapsedWeeks)
+        return start to start.plusDays(7).minusNanos(1)
     }
 }

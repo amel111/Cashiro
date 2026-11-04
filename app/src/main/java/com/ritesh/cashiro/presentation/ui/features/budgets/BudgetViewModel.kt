@@ -146,7 +146,10 @@ class BudgetViewModel @Inject constructor(
                                 startDate = start,
                                 endDate = end
                             )
-                            budgetWithSpending = budgetRepository.getBudgetWithSpending(customBudget)
+                            budgetWithSpending = budgetRepository.getBudgetWithSpending(
+                                customBudget,
+                                useRecurringPeriod = false
+                            )
                         } catch (e: Exception) {
                             // Fallback to normal if parsing fails
                         }
@@ -268,7 +271,9 @@ class BudgetViewModel @Inject constructor(
                 year = now.year,
                 month = now.monthValue,
                 startDate = now,
-                endDate = now.plusMonths(1).minusDays(1),
+                endDate = now.plusDays(7).minusNanos(1),
+                periodType = BudgetPeriod.WEEKLY,
+                trackType = BudgetTrackType.ADDED_ONLY,
                 currency = currency
             )
         }

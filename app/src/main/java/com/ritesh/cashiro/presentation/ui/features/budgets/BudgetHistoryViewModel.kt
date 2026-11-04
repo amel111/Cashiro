@@ -17,6 +17,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 data class BudgetPeriodHistory(
@@ -106,6 +107,14 @@ class BudgetHistoryViewModel @Inject constructor(
 
         var currentStart = budget.startDate
         var currentEnd = budget.endDate
+        if (budget.periodType == BudgetPeriod.WEEKLY) {
+            val elapsedWeeks = ChronoUnit.WEEKS.between(
+                budget.startDate.toLocalDate(),
+                now.toLocalDate()
+            ).coerceAtLeast(0)
+            currentStart = budget.startDate.plusWeeks(elapsedWeeks)
+            currentEnd = currentStart.plusDays(7).minusNanos(1)
+        }
 
         // Add current period
         periods.add(currentStart to currentEnd)
@@ -124,7 +133,7 @@ class BudgetHistoryViewModel @Inject constructor(
             
             val prevEnd = when (budget.periodType) {
                 BudgetPeriod.DAILY -> prevStart
-                BudgetPeriod.WEEKLY -> prevStart.plusDays(6).withHour(23).withMinute(59).withSecond(59)
+                BudgetPeriod.WEEKLY -> prevStart.plusDays(7).minusNanos(1)
                 BudgetPeriod.MONTHLY -> prevStart.withDayOfMonth(prevStart.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59)
                 BudgetPeriod.YEARLY -> prevStart.plusYears(1).minusDays(1).withHour(23).withMinute(59).withSecond(59)
                 else -> break
@@ -155,7 +164,10 @@ class BudgetHistoryViewModel @Inject constructor(
             startDate = startDate,
             endDate = endDate
         )
-        val spending = budgetRepository.getBudgetWithSpending(tempBudget)
+        val spending = budgetRepository.getBudgetWithSpending(
+            tempBudget,
+            useRecurringPeriod = false
+        )
         return spending.currentSpending
     }
 
